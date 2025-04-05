@@ -1,25 +1,36 @@
-"use client"
+"use client";
 
-import { Plus, Search, Grid, List } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useState } from "react"
-import type { Task } from "@/types/task.type"
-import { createTask } from "@/actions/tasks"
-import { TaskForm } from "./taskForm"
-import { toast } from "sonner"
+import { Plus, Search, Grid, List } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import type { Task } from "@/types/task.type";
+import { createTask } from "@/actions/tasks";
+import { TaskForm } from "./taskForm";
+import { toast } from "sonner";
 
 interface TasksHeaderProps {
-  onSearch: (term: string) => void
-  onStatusChange: (status: string) => void
-  onViewChange: (view: "grid" | "table") => void
-  view: "grid" | "table"
-  onTaskCreated?: (task: Task) => void
+  onSearch: (term: string) => void;
+  onStatusChange: (status: string) => void;
+  onViewChange: (view: "grid" | "table") => void;
+  view: "grid" | "table";
+  onTaskCreated?: (task: Task) => void;
 }
 
-export function TasksHeader({ onSearch, onStatusChange, onViewChange, view, onTaskCreated }: TasksHeaderProps) {
-  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false)
+export function TasksHeader({
+  onSearch,
+  onStatusChange,
+  onViewChange,
+  view,
+  onTaskCreated,
+}: TasksHeaderProps) {
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string>("all");
+
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
+    onStatusChange(filter);
+  };
 
   const handleSaveTask = async (task: Task) => {
     try {
@@ -30,21 +41,20 @@ export function TasksHeader({ onSearch, onStatusChange, onViewChange, view, onTa
         priority: task.priority,
         due_date: task.due_date,
         matter_id: task.matter_id,
-      } as Omit<Task, "id">
+      } as Omit<Task, "id">;
 
-      setIsAddTaskOpen(false)
+      setIsAddTaskOpen(false);
 
-      const createdTask = await createTask(newTask)
+      const createdTask = await createTask(newTask);
 
       if (createdTask && onTaskCreated) {
-        onTaskCreated(createdTask)
+        onTaskCreated(createdTask);
       }
-
     } catch (error) {
-      console.error("Error creating task:", error)
-      toast.error("Failed to create task")
+      console.error("Error creating task:", error);
+      toast.error("Failed to create task");
     }
-  }
+  };
 
   const handleSaveAndCreateAnother = async (task: Task) => {
     try {
@@ -55,111 +65,102 @@ export function TasksHeader({ onSearch, onStatusChange, onViewChange, view, onTa
         priority: task.priority,
         due_date: task.due_date,
         matter_id: task.matter_id,
-      } as Omit<Task, "id">
+      } as Omit<Task, "id">;
 
-      const createdTask = await createTask(newTask)
+      const createdTask = await createTask(newTask);
 
       if (createdTask && onTaskCreated) {
-        onTaskCreated(createdTask)
+        onTaskCreated(createdTask);
       }
     } catch (error) {
-      console.error("Error creating task:", error)
-      toast.error("Failed to create task")
+      console.error("Error creating task:", error);
+      toast.error("Failed to create task");
     }
-  }
+  };
 
   return (
     <div className="w-full">
-      {/* Top section with title and view toggle - stack on mobile, side by side on larger screens */}
-      <div className=" flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4 sm:mb-6"></div>
-
       {/* Main controls section */}
-      <div className="bg-white shadow dark:bg-gray-800 rounded-lg p-1 sm:p-4 border dark:border-gray-700">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-          {/* Mobile view toggle */}
-          <div className="flex sm:hidden justify-between items-center">
-            <div className="bg-muted rounded-lg p-1 flex">
-              <Button
-                variant={view === "grid" ? "default" : "ghost"}
-                size="sm"
-                className="rounded-md p-2"
-                onClick={() => onViewChange("grid")}
-              >
-                <Grid className="h-4 w-4" />
-                <span className="sr-only">Grid View</span>
-              </Button>
-              <Button
-                variant={view === "table" ? "default" : "ghost"}
-                size="sm"
-                className="rounded-md p-2"
-                onClick={() => onViewChange("table")}
-              >
-                <List className="h-4 w-4" />
-                <span className="sr-only">Table View</span>
-              </Button>
-            </div>
+      <div className="bg-white shadow dark:bg-gray-800 rounded-lg p-3 sm:p-3 border dark:border-gray-700">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* New Task Button */}
+          <Button
+            variant="blue"
+            size="sm"
+            className="sm:h-9"
+            onClick={() => setIsAddTaskOpen(true)}
+          >
+            <Plus className="h-3 w-3 mr-1 sm:mr-2" />
+            <span className="text-xs sm:text-sm">New Task</span>
+          </Button>
 
-            <Button variant="default" size="sm" onClick={() => setIsAddTaskOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              <span className="dark:text-white">New</span>
+          {/* Search Bar */}
+          <div className="relative w-full sm:w-auto max-w-xs sm:max-w-sm flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search tasks..."
+              className="w-full pl-10 h-9 text-sm bg-gray-100 dark:bg-gray-700 border-none shadow"
+              onChange={(e) => onSearch(e.target.value)}
+            />
+          </div>
+
+          {/* Filter Buttons */}
+          <div className="flex flex-wrap gap-2 bg-gray-100 shadow dark:bg-gray-700 rounded-md  justify-center sm:justify-start">
+            <Button
+              variant={activeFilter === "all" ? "blue" : "ghost"}
+              size="sm"
+              className="px-3 py-1 h-9 text-xs font-medium rounded-md flex-1 sm:flex-none hover:cursor-pointer"
+              onClick={() => handleFilterChange("all")}
+            >
+              All Tasks
+            </Button>
+            <Button
+              variant={activeFilter === "in-progress" ? "blue" : "ghost"}
+              size="sm"
+              className="px-3 h-9 text-xs font-medium rounded-md flex-1 sm:flex-none hover:cursor-pointer"
+              onClick={() => handleFilterChange("in-progress")}
+            >
+              In-Progress
+            </Button>
+            <Button
+              variant={activeFilter === "overdue" ? "blue" : "ghost"}
+              size="sm"
+              className="px-3 h-9 text-xs font-medium rounded-md flex-1 sm:flex-none hover:cursor-pointer"
+              onClick={() => handleFilterChange("overdue")}
+            >
+              Overdue
+            </Button>
+            <Button
+              variant={activeFilter === "completed" ? "blue" : "ghost"}
+              size="sm"
+              className="px-3 h-9 text-xs font-medium rounded-md flex-1 sm:flex-none hover:cursor-pointer"
+              onClick={() => handleFilterChange("completed")}
+            >
+              Completed
             </Button>
           </div>
 
-          {/* Desktop new task button */}
-          <div className="hidden sm:block">
-            <Button variant="default" onClick={() => setIsAddTaskOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              <span className="dark:text-grey-800">New Task</span>
+          {/* View Toggle */}
+          <div className="grid grid-cols-2 gap bg-gray-100 shadow dark:bg-gray-700 rounded-md w-full sm:flex sm:gap-3 sm:w-auto sm:justify-start">
+            <Button
+              variant={view === "grid" ? "blue" : "ghost"}
+              size="sm"
+              className="px-3 h-9 text-xs font-medium rounded-md flex-1 sm:flex-none hover:cursor-pointer"
+              onClick={() => onViewChange("grid")}
+            >
+              <Grid className="h-5 w-5 mr-2" />
+              <span className="text-xs">Grid</span>
             </Button>
-          </div>
-
-          {/* Tabs and search - stack on mobile */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-            <Tabs defaultValue="all" className="w-full sm:w-fit" onValueChange={onStatusChange}>
-              <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:flex">
-                <TabsTrigger value="all">
-                  <span className="dark:text-white">All</span>
-                </TabsTrigger>
-                <TabsTrigger value="pending">
-                  <span className="dark:text-white">Pending</span>
-                </TabsTrigger>
-                <TabsTrigger value="completed">
-                  <span className="dark:text-white">Completed</span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
-            <div className="relative w-full sm:w-auto">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search tasks..."
-                className="w-full sm:w-[250px] pl-8 dark:text-gray-400"
-                onChange={(e) => onSearch(e.target.value)}
-              />
-            </div>
-            <div className="hidden sm:flex sm:items-center sm:gap-2">
-              <div className="bg-muted rounded-lg p-1 flex">
-                <Button
-                  variant={view === "grid" ? "default" : "ghost"}
-                  size="sm"
-                  className="rounded-md"
-                  onClick={() => onViewChange("grid")}
-                >
-                  <Grid className="h-4 w-4 mr-2" />
-                  <span className="dark:text-grey-800">Grid View</span>
-                </Button>
-                <Button
-                  variant={view === "table" ? "default" : "ghost"}
-                  size="sm"
-                  className="rounded-md"
-                  onClick={() => onViewChange("table")}
-                >
-                  <List className="h-4 w-4 mr-2" />
-                  <span className="dark:text-grey-800">Table View</span>
-                </Button>
-              </div>
-            </div>
+            <Button
+              variant={view === "table" ? "blue" : "ghost"}
+              size="sm"
+              className="px-3 h-9 text-xs font-medium rounded-md flex-1 sm:flex-none hover:cursor-pointer"
+              onClick={() => onViewChange("table")}
+            >
+              <List className="h-5 w-5 mr-2" />
+              <span className="text-xs">Table</span>
+            </Button>
           </div>
         </div>
 
@@ -171,6 +172,5 @@ export function TasksHeader({ onSearch, onStatusChange, onViewChange, view, onTa
         />
       </div>
     </div>
-  )
+  );
 }
-

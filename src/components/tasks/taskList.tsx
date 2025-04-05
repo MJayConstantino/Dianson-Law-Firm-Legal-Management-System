@@ -73,6 +73,7 @@ export function TaskList() {
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "in-progress" && task.status === "in-progress") ||
+        (statusFilter === "overdue" && task.status === "overdue") ||
         (statusFilter === "completed" && task.status === "completed");
 
       return matchesSearch && matchesStatus;

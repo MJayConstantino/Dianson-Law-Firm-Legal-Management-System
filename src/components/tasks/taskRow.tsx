@@ -11,8 +11,9 @@ import { getMatters } from "@/actions/matters";
 import { getMattersDisplayName } from "@/utils/getMattersDisplayName";
 import { TaskForm } from "./taskForm";
 import { getStatusColor } from "@/utils/getStatusColor";
-import { Priority, Task } from "@/types/task.type";
+import { Status, Task } from "@/types/task.type";
 import { toast } from "sonner";
+import { Skeleton } from "../ui/skeleton";
 
 interface TaskRowProps {
   task: Task;
@@ -27,31 +28,40 @@ export function TaskRow({ task, onTaskUpdated }: TaskRowProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isOverdue, setIsOverdue] = useState(false);
 
-   const checkIsOverdue = (dueDate?: Date, status?: string) => {
-      if (!dueDate || status === "completed") return false;
-      return isBefore(new Date(dueDate), new Date());
-    };
-  
-    useEffect(() => {
-      const overdue = checkIsOverdue(localTask.due_date, localTask.status);
-      setIsOverdue(overdue);
-  
-      if (overdue && localTask.priority !== "overdue") {
-        const updatedTask = {
-          ...localTask,
-          priority: "overdue" as Priority,
-        };
-        setLocalTask(updatedTask);
-        updateTask(localTask.task_id, { status: localTask.status }, updatedTask)
-          .then(() => {
-            console.log("Priority updated to overdue in the database");
-          })
-          .catch((error) => {
-            console.error("Failed to update task priority in the database:", error);
-            setLocalTask(task);
-          });
-      }
-    }, [localTask, localTask.due_date, localTask.priority, localTask.status, task]);
+  const checkIsOverdue = (dueDate?: Date, status?: string) => {
+    if (!dueDate || status === "completed") return false;
+    return isBefore(new Date(dueDate), new Date());
+  };
+
+  useEffect(() => {
+    const overdue = checkIsOverdue(localTask.due_date, localTask.status);
+    setIsOverdue(overdue);
+
+    if (overdue && localTask.status !== "overdue") {
+      const updatedTask = {
+        ...localTask,
+        Status: "overdue" as Status,
+      };
+      setLocalTask(updatedTask);
+      updateTask(localTask.task_id, { status: localTask.status }, updatedTask)
+        .then(() => {
+          console.log("Priority updated to overdue in the database");
+        })
+        .catch((error) => {
+          console.error(
+            "Failed to update task priority in the database:",
+            error
+          );
+          setLocalTask(task);
+        });
+    }
+  }, [
+    localTask,
+    localTask.due_date,
+    localTask.priority,
+    localTask.status,
+    task,
+  ]);
 
   useEffect(() => {
     setLocalTask(task);
@@ -102,7 +112,6 @@ export function TaskRow({ task, onTaskUpdated }: TaskRowProps) {
         }
       );
       toast.success("Task marked as completed");
-      
 
       if (onTaskUpdated) onTaskUpdated();
     } catch (error) {
@@ -167,38 +176,50 @@ export function TaskRow({ task, onTaskUpdated }: TaskRowProps) {
   return (
     <>
       <div
-        className={`flex items-center my-2 rounded-lg justify-between p-3 sm:p-4 border hover:bg-muted/20 ${
+        className={`flex items-center my-2 rounded-lg justify-between p-3 sm:p-4 border ${
           isOverdue
             ? "border-red-500 bg-red-50 dark:bg-red-950"
+            : localTask.status === "completed"
+            ? "border-green-500 bg-green-50 dark:bg-green-950"
             : "bg-white dark:bg-gray-800 dark:border-gray-700"
         }`}
       >
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleComplete}
+          disabled={localTask.status === "completed" || isProcessing}
+          className={`mr-2 sm:mr-4 flex-shrink-0 ${
+            localTask.status === "completed" ? "hover:cursor-not-allowed" : "hover:cursor-pointer"
+          }`}
+        >
+          <Check className="h-4 w-4" />
+          <span className="sr-only">Complete</span>
+        </Button>
         <div className="flex-1 min-w-0 mr-2 ">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-medium truncate">{localTask.name}</h3>
             {localTask.priority && (
               <Badge
-              variant="outline"
-              className={`ml-2 flex-shrink-0 text-xs ${
-                isOverdue
-                  ? "text-red-600 border-red-600"
-                  : getStatusColor(localTask.priority)
-              }`}
-            >
-              {isOverdue ? "overdue" : localTask.priority}
-            </Badge>
+                variant="outline"
+                className={`text-xs ${getStatusColor(localTask.priority)}`}
+              >
+                {localTask.priority}
+              </Badge>
             )}
           </div>
           <div className="text-xs sm:text-sm text-muted-foreground truncate">
-            {isLoadingMatters
-              ? "Loading matter..."
-              : matterName || "No matter assigned"}
+            {isLoadingMatters ? (
+              <Skeleton className="inline-block w-24 h-4 rounded" />
+            ) : (
+              matterName || "No matter assigned"
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 dark:text-gray-400">
           <div className="text-xs sm:text-sm hidden sm:block">
-            <span className={isOverdue ? "text-red-600" : ""}>
+            <span className="text-xs sm:text-sm line-clamp-1 ext-muted-foreground dark:text-gray-400">
               {formatDate(localTask.due_date)}
             </span>
           </div>
@@ -216,17 +237,8 @@ export function TaskRow({ task, onTaskUpdated }: TaskRowProps) {
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleComplete}
-              disabled={localTask.status === "completed" || isProcessing}
-            >
-              <Check className="h-4 w-4" />
-              <span className="sr-only">Complete</span>
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="icon"
               onClick={handleEdit}
+              className="hover:cursor-pointer"
               disabled={isProcessing}
             >
               <Pencil className="h-4 w-4" />
@@ -237,7 +249,7 @@ export function TaskRow({ task, onTaskUpdated }: TaskRowProps) {
               variant="ghost"
               size="icon"
               onClick={handleDelete}
-              className="text-destructive hover:text-destructive"
+              className="text-destructive hover:text-destructive hover:cursor-pointer"
               disabled={isProcessing}
             >
               <Trash2 className="h-4 w-4" />

@@ -174,11 +174,11 @@ export function TaskForm({ open, onOpenChange   , onSave, onSaveAndCreateAnother
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <h3 className="text-sm font-medium">Details</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
                 <Label htmlFor="name">Name</Label>
                 <Input
+                  placeholder="Task name"
                   id="name"
                   value={task.name}
                   onChange={(e) => handleChange("name", e.target.value)}
@@ -188,7 +188,7 @@ export function TaskForm({ open, onOpenChange   , onSave, onSaveAndCreateAnother
               <div>
                 <Label htmlFor="priority">Priority</Label>
                 <Select value={task.priority} onValueChange={(value) => handleChange("priority", value)}>
-                  <SelectTrigger id="priority" className="mt-1">
+                  <SelectTrigger id="priority" className="mt-1 hover:cursor-pointer">
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -203,6 +203,7 @@ export function TaskForm({ open, onOpenChange   , onSave, onSaveAndCreateAnother
             <div>
               <Label htmlFor="description">Description</Label>
               <Textarea
+                placeholder="Optional"
                 id="description"
                 className="mt-1 resize-none"
                 rows={3}
@@ -216,7 +217,7 @@ export function TaskForm({ open, onOpenChange   , onSave, onSaveAndCreateAnother
             <div className="space-y-2">
               <Label htmlFor="assigned-matter">Assigned Matter</Label>
               <Select value={task.matter_id || ""} onValueChange={(value) => handleChange("matter_id", value)}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full hover:cursor-pointer">
                   <SelectValue placeholder={selectedMatterName || "Select a matter"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -248,7 +249,7 @@ export function TaskForm({ open, onOpenChange   , onSave, onSaveAndCreateAnother
                 value={task.status}
                 onValueChange={(value: "in-progess" | "completed") => handleChange("status", value)}
               >
-                <SelectTrigger id="taskStatus" className="mt-1">
+                <SelectTrigger id="taskStatus" className="mt-1 hover:cursor-pointer">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -264,7 +265,7 @@ export function TaskForm({ open, onOpenChange   , onSave, onSaveAndCreateAnother
             <Input
               id="dueDate"
               type="date"
-              className="mt-1"
+              className="mt-1 hover:cursor-pointer"
               value={task.due_date ? format(task.due_date, "yyyy-MM-dd") : ""}
               onChange={(e) => handleChange("due_date", e.target.value ? new Date(e.target.value) : undefined)}
             />
@@ -274,7 +275,7 @@ export function TaskForm({ open, onOpenChange   , onSave, onSaveAndCreateAnother
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
               type="submit"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto hover:cursor-pointer"
               onClick={() => handleSubmit(false)}
               disabled={isSubmitting}
             >
@@ -283,7 +284,7 @@ export function TaskForm({ open, onOpenChange   , onSave, onSaveAndCreateAnother
             {!task.task_id && (
               <Button
                 variant="outline"
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto hover:cursor-pointer"
                 onClick={() => handleSubmit(true)}
                 disabled={isSubmitting}
               >
@@ -293,7 +294,7 @@ export function TaskForm({ open, onOpenChange   , onSave, onSaveAndCreateAnother
           </div>
           <Button
             variant="ghost"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto hover:cursor-pointer"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
