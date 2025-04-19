@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react"
 import { BillingsEditDialog } from "@/components/billings/billingsEditDialog"
 import { mockMatters, mockBills } from "./mockDataForSB"
 import { userEvent } from "@storybook/test"
+import { Toaster } from "sonner"
 
 
 const meta: Meta<typeof BillingsEditDialog> = {
@@ -14,13 +15,17 @@ type Story = StoryObj<typeof BillingsEditDialog>
 
 export const Default: Story = {
   render: () => (
-    <BillingsEditDialog
-      open={true}
-      bill={mockBills[0]}
-      matters={mockMatters}
-      onSave={(bill) => console.log("Bill updated:", bill)}
-      onOpenChange={(open) => console.log("Dialog open state:", open)}
-    />
+    <>
+      <BillingsEditDialog
+        open={true}
+        bill={mockBills[0]}
+        matters={mockMatters}
+        onSave={(bill) => console.log("Bill updated:", bill)}
+        onOpenChange={(open) => console.log("Dialog open state:", open)}
+      />
+      <Toaster position="top-right" richColors />
+    </>
+    
   ),
 }
 
@@ -32,6 +37,12 @@ export const EditBillFormPlay: Story = {
     onSave: (bill) => console.log("Bill saved:", bill),
     onOpenChange: (open) => console.log("Dialog open state:", open),
   },
+  render: (args) => (
+    <>
+      <BillingsEditDialog {...args} />
+      <Toaster position="top-right" richColors />
+    </>
+  ),
   play: async ({ step }) => {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -78,16 +89,13 @@ export const EditBillFormPlay: Story = {
 
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    await step("Add remarks", async () => {
-      const remarksInput =
-        document.querySelector('textarea[id="remarks"]') ||
-        document.querySelector('textarea[placeholder="(optional)"]')
+    await step("Click save button", async () => {
+      const clickSave = document.querySelector('button[id="saveBtn"]')
 
-      if (remarksInput) {
-        await userEvent.keyboard("Edited remarks.", { delay: 100 })
+      if (clickSave) {
+        await userEvent.click(clickSave)
       }
     })
-
     await new Promise((resolve) => setTimeout(resolve, 5000))
   }
 

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react"
 import { userEvent } from "@storybook/test"
 import { BillingsAddDialog } from "@/components/billings/billingsAddDialog"
 import { mockMatters } from "./mockDataForSB"
+import { Toaster } from 'sonner';
 
 const meta: Meta<typeof BillingsAddDialog> = {
   title: "Billings/AddBillDialog",
@@ -22,6 +23,12 @@ export const GlobalAddBillForm: Story = {
     onSave: (bill) => console.log("Bill saved:", bill),
     onOpenChange: (open) => console.log("Dialog open state:", open),
   },
+  render: (args) => (
+    <>
+      <BillingsAddDialog {...args} />
+      <Toaster position="top-right" richColors />
+    </>
+  ),
 }
 
 export const MatterBillingAddBillForm: Story = {
@@ -33,6 +40,12 @@ export const MatterBillingAddBillForm: Story = {
     onSave: (bill) => console.log("Bill saved:", bill),
     onOpenChange: (open) => console.log("Dialog open state:", open),
   },
+  render: (args) => (
+    <>
+      <BillingsAddDialog {...args} />
+      <Toaster position="top-right" richColors />
+    </>
+  ),
 }
 
 export const AddBillFormPlay: Story = {
@@ -42,6 +55,12 @@ export const AddBillFormPlay: Story = {
     onSave: (bill) => console.log("Bill saved:", bill),
     onOpenChange: (open) => console.log("Dialog open state:", open),
   },
+  render: (args) => (
+    <>
+      <BillingsAddDialog {...args} />
+      <Toaster position="top-right" richColors />
+    </>
+  ),
   play: async ({ step }) => {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -108,9 +127,20 @@ export const AddBillFormPlay: Story = {
 
       if (remarksInput) {
         await userEvent.keyboard("Example remarks for this bill.{Enter}This can be any length; it's also optional and can be left blank.", { delay: 100 })
+        await userEvent.tab()
+        await userEvent.tab()
       }
     })
 
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    await step("Click save button", async () => {
+      const clickSave = document.querySelector('button[id="saveBtn"]')
+
+      if (clickSave) {
+        await userEvent.click(clickSave)
+      }
+    })
     await new Promise((resolve) => setTimeout(resolve, 5000))
   }
 
@@ -126,6 +156,12 @@ export const MatterBillingAddBillFormPlay: Story = {
     onSave: (bill) => console.log("Bill saved:", bill),
     onOpenChange: (open) => console.log("Dialog open state:", open),
   },
+  render: (args) => (
+    <>
+      <BillingsAddDialog {...args} />
+      <Toaster position="top-right" richColors />
+    </>
+  ),
   play: async ({ step }) => {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -165,6 +201,18 @@ export const MatterBillingAddBillFormPlay: Story = {
       if (selectStatus) {
         await userEvent.keyboard("{Enter}", { delay: 100 })
         await userEvent.keyboard("{Enter}", { delay: 100 })
+        await userEvent.tab()
+        await userEvent.tab()
+        await userEvent.tab()
+      }
+    })
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    await step("Click save button", async () => {
+      const clickSave = document.querySelector('button[id="saveBtn"]')
+
+      if (clickSave) {
+        await userEvent.click(clickSave)
       }
     })
     await new Promise((resolve) => setTimeout(resolve, 5000))

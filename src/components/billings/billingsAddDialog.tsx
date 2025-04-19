@@ -5,6 +5,7 @@ import { CalendarIcon } from "lucide-react"
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Bill, BillStatus } from "@/types/billing.type";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,8 @@ export interface BillingsAddDialogProps {
   matters: Matter[];
   matterBillingMatterId: string;
   disableMatterColumn?: boolean;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
 }
 
 export function BillingsAddDialog({
@@ -42,6 +45,8 @@ export function BillingsAddDialog({
   matters,
   matterBillingMatterId,
   disableMatterColumn = false,
+  onSuccess,
+  onError
 }: BillingsAddDialogProps) {
   const {
     name,
@@ -55,7 +60,9 @@ export function BillingsAddDialog({
     remarks,
     setRemarks,
     dateString,
-    setDateString
+    setDateString,
+    isSubmitting,
+    setIsSubmitting
   } = BillingStates();
   const [matter_id, setMatterId] = useState(matterBillingMatterId || "");
   const dateInputRef = useRef<HTMLInputElement>(null)
@@ -69,32 +76,51 @@ export function BillingsAddDialog({
   }, [open, matterBillingMatterId]);
 
   const handleSave = () => {
-    if (!name || !amount || !matter_id) return;
+    if (!name || !amount || !matter_id) {
+      toast.error("Please fill in all required fields.")
+      return;
+    }
 
-    const newBill: Omit<Bill, "bill_id"> = {
-      matter_id,
-      name,
-      amount: Number(amount),
-      created_at: created_at.toISOString(),
-      status,
-      remarks,
-    };
+    setIsSubmitting(true)
 
-    onSave(newBill);
-    resetForm();
-    onOpenChange(false);
-  };
+    try {
+      const newBill: Omit<Bill, "bill_id"> = {
+        matter_id,
+        name,
+        amount: Number(amount),
+        created_at: created_at.toISOString(),
+        status,
+        remarks,
+      }
+
+      onSave(newBill)
+
+      toast.success(`"${name}"  has been added successfully.`)
+
+      if (onSuccess) onSuccess()
+      resetForm()
+      onOpenChange(false)
+    } catch (error) {
+
+      toast.error("Failed to create bill. Please try again.")
+
+      if (onError && error instanceof Error) onError(error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const resetForm = () => {
-    setMatterId("");
-    setName("");
-    setAmount("");
-    const today = new Date()
-      setCreated_at(today)
-      setDateString(format(today, "yyyy-MM-dd"))
-    setStatus(BillStatus.pending);
-    setRemarks("");
-  };
+    if (!matterBillingMatterId) {
+      setMatterId("")
+    }
+    setName("")
+    setAmount("")
+    setCreated_at(new Date())
+    setDateString(format(new Date(), "yyyy-MM-dd"))
+    setStatus(BillStatus.pending)
+    setRemarks("")
+  }
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDateString = e.target.value
@@ -183,7 +209,14 @@ export function BillingsAddDialog({
                   id="amount"
                   type="number"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if(Number(value) < 0){
+                      toast.error("Invalid amount format.")
+                    }else if(Number(value) >= 0 || value === ""){
+                      setAmount(e.target.value)}
+                    }
+                  }
                   placeholder="Enter amount"
                   className="text-sm md:text-base h-9 md:h-10 dark:bg-gray-700 dark:border-gray-600"
                 />
@@ -287,6 +320,7 @@ export function BillingsAddDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="text-sm md:text-base h-9 md:h-10 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
@@ -294,8 +328,9 @@ export function BillingsAddDialog({
             id="saveBtn"
             className="bg-indigo-900 hover:bg-indigo-800 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-sm md:text-base h-9 md:h-10"
             onClick={handleSave}
+            disabled={isSubmitting}
           >
-            Save
+            {isSubmitting ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

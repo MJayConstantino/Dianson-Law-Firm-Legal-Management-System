@@ -6,6 +6,7 @@ import { CalendarIcon } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import type { Bill, BillStatus } from "@/types/billing.type";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,8 @@ interface BillingsEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (bill: Bill) => void;
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
 }
 
 export function BillingsEditDialog({
@@ -39,6 +42,8 @@ export function BillingsEditDialog({
   open,
   onOpenChange,
   onSave,
+  onSuccess,
+  onError
 }: BillingsEditDialogProps) {
   const {
     name,
@@ -54,7 +59,9 @@ export function BillingsEditDialog({
     dateString,
     setDateString,
     setMatterId,
-    matter_id
+    matter_id,
+    isSubmitting,
+    setIsSubmitting
   } = BillingStates();
 
   const dateInputRef = useRef<HTMLInputElement>(null)
@@ -69,6 +76,7 @@ export function BillingsEditDialog({
       setCreated_at(new Date(bill.created_at));
       setStatus(bill.status);
       setRemarks(bill.remarks || "");
+      setIsSubmitting(false);
     }
   }, [
     bill,
@@ -79,23 +87,43 @@ export function BillingsEditDialog({
     setCreated_at,
     setStatus,
     setRemarks,
+    setIsSubmitting,
   ]);
 
   const handleSave = () => {
-    if (!name || !amount || !matter_id) return;
+    if (!name || !amount || !matter_id){
+      toast.error("Please fill in all required fields.")
+      return;
+    }
 
-    const updatedBill: Bill = {
-      ...bill,
-      matter_id,
-      name,
-      amount: Number(amount),
-      created_at: created_at.toISOString(),
-      status,
-      remarks,
-    };
+    setIsSubmitting(true)
 
-    onSave(updatedBill);
-    onOpenChange(false);
+    try{
+      const updatedBill: Bill = {
+        ...bill,
+        matter_id,
+        name,
+        amount: Number(amount),
+        created_at: created_at.toISOString(),
+        status,
+        remarks,
+      };
+
+      onSave(updatedBill);
+      toast.success("Bill edited successfully.")
+
+      if (onSuccess) onSuccess()
+      onOpenChange(false)
+
+    }catch (error) {
+
+      toast.error("Failed to edit bill. Please try again.")
+
+      if (onError && error instanceof Error) onError(error)
+    } finally {
+      setIsSubmitting(false)
+    }
+    
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,7 +182,14 @@ export function BillingsEditDialog({
                   id="edit-amount"
                   type="number"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if(Number(value) < 0){
+                      toast.error("Invalid amount format.")
+                    }else if(Number(value) >= 0 || value === ""){
+                      setAmount(e.target.value)}
+                    }
+                  }
                   className="text-sm md:text-base h-9 md:h-10 dark:bg-gray-700 dark:border-gray-600"
                 />
               </div>
@@ -259,6 +294,7 @@ export function BillingsEditDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="text-sm md:text-base h-9 md:h-10 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
@@ -266,8 +302,9 @@ export function BillingsEditDialog({
             id="saveBtn"
             className="bg-indigo-900 hover:bg-indigo-800 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-sm md:text-base h-9 md:h-10"
             onClick={handleSave}
+            disabled={isSubmitting}
           >
-            Save
+            {isSubmitting ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

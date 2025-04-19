@@ -14,6 +14,7 @@ export function BillingStates(){
     const [remarks, setRemarks] = useState("")
     const [matter_id, setMatterId] = useState("")
     const [dateString, setDateString] = useState(format(new Date(), "yyyy-MM-dd"))
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     // billing items
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -42,7 +43,7 @@ export function BillingStates(){
 
     return{
         name, setName, remarks, setRemarks, amount, setAmount, created_at, setCreated_at, 
-        status, setStatus, matter_id, setMatterId, dateString, setDateString,
+        status, setStatus, matter_id, setMatterId, dateString, setDateString, isSubmitting, setIsSubmitting,
         
         isEditDialogOpen, setIsEditDialogOpen, isDeleteDialogOpen, setIsDeleteDialogOpen,
 
