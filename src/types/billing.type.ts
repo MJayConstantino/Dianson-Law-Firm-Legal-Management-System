@@ -1,4 +1,4 @@
-// export type BillStatus = "Active" | "Paid" | "Pending" | "Overdue"
+
 export enum BillStatus {
   active = "active",
   paid = "paid",
@@ -11,7 +11,7 @@ export interface Bill {
   matter_id: string
   name: string
   amount: number
-  created_at: string
+  created_at: Date | string
   status: BillStatus
   remarks: string
 }
